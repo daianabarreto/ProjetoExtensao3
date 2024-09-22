@@ -1,0 +1,119 @@
+{
+  "sensores": [
+    {
+      "sensorId": "sensor_001",
+      "localizacao": {
+        "latitude": -30.0350,
+        "longitude": -51.2200
+      },
+      "dados": {
+        "nivelAgua": {
+          "valor": 2.5,
+          "unidade": "m"
+        },
+        "precipitacao": {
+          "valor": 150,
+          "unidade": "mm"
+        },
+        "dataHora": "2024-09-21T14:30:00Z"
+      },
+      "alerta": {
+        "nivelCritico": 3.0,
+        "status": "normal",
+        "mensagem": "Nível de água está dentro do limite seguro."
+      }
+    },
+    {
+      "sensorId": "sensor_002",
+      "localizacao": {
+        "latitude": -30.0400,
+        "longitude": -51.2150
+      },
+      "dados": {
+        "nivelAgua": {
+          "valor": 3.2,
+          "unidade": "m"
+        },
+        "precipitacao": {
+          "valor": 180,
+          "unidade": "mm"
+        },
+        "dataHora": "2024-09-21T14:30:00Z"
+      },
+      "alerta": {
+        "nivelCritico": 3.0,
+        "status": "alerta",
+        "mensagem": "Atenção: Nível de água elevado!"
+      }
+    },
+    {
+      "sensorId": "sensor_003",
+      "localizacao": {
+        "latitude": -30.0450,
+        "longitude": -51.2200
+      },
+      "dados": {
+        "nivelAgua": {
+          "valor": 4.1,
+          "unidade": "m"
+        },
+        "precipitacao": {
+          "valor": 200,
+          "unidade": "mm"
+        },
+        "dataHora": "2024-09-21T14:30:00Z"
+      },
+      "alerta": {
+        "nivelCritico": 3.5,
+        "status": "alerta",
+        "mensagem": "Atenção: Inundação iminente!"
+      }
+    },
+    {
+      "sensorId": "sensor_004",
+      "localizacao": {
+        "latitude": -30.0500,
+        "longitude": -51.2050
+      },
+      "dados": {
+        "nivelAgua": {
+          "valor": 3.8,
+          "unidade": "m"
+        },
+        "precipitacao": {
+          "valor": 220,
+          "unidade": "mm"
+        },
+        "dataHora": "2024-09-21T14:30:00Z"
+      },
+      "alerta": {
+        "nivelCritico": 4.0,
+        "status": "alerta",
+        "mensagem": "Cuidado: Alto risco de inundação!"
+      }
+    },
+    {
+      "sensorId": "sensor_005",
+      "localizacao": {
+        "latitude": -30.0300,
+        "longitude": -51.2000
+      },
+      "dados": {
+        "nivelAgua": {
+          "valor": 3.5,
+          "unidade": "m"
+        },
+        "precipitacao": {
+          "valor": 210,
+          "unidade": "mm"
+        },
+        "dataHora": "2024-09-21T14:30:00Z"
+      },
+      "alerta": {
+        "nivelCritico": 3.5,
+        "status": "alerta",
+        "mensagem": "Atenção: Situação crítica de alagamento!"
+      }
+    }
+  ]
+}

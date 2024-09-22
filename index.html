@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico em Tempo Real com Firebase</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
+
+
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+    <!-- Incluindo a biblioteca Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+        // Configurações do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAf6l_oPdN0ZxR0L03XvhtzwQvqpj7F6mM",
+            authDomain: "controle-enchentes.firebaseapp.com",
+            databaseURL: "https://controle-enchentes-default-rtdb.firebaseio.com",
+            projectId: "controle-enchentes",
+            storageBucket: "controle-enchentes.appspot.com",
+            messagingSenderId: "78343132048",
+            appId: "1:78343132048:web:a06f3a2e7673a6d6fe1915"
+        };
+
+        // Inicializando o Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Inicializando o mapa no centro de Porto Alegre (-30.0346, -51.2177)
+        const map = L.map('map').setView([-30.0346, -51.2177], 13);
+
+        // Adicionando as camadas de mapa do OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map)
+
+        // Ícones personalizados
+        const redIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/5626/5626253.png', // Ícone vermelho
+            iconSize: [40, 40], // Tamanho do ícone
+            iconAnchor: [20, 40], // Ponto do ícone que irá representar a localização
+            popupAnchor: [0, -40] // Ponto que o popup será ancorado em relação ao ícone
+        });
+
+        const yellowIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/5626/5626190.png', // Ícone azul
+            iconSize: [40, 40], // Tamanho do ícone
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -40]
+        });
+
+        const defaultIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/390/390973.png', // Ícone azul
+            iconSize: [40, 40], // Tamanho do ícone
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -40]
+        });
+
+
+        async function carregarSensores() {
+            const tbody = $("#tbodySensores");
+            const sensoresRef = ref(database, 'sensores');
+            const locations = []; // Para armazenar as localizações dos sensores
+
+            const sensoresArray = [];
+
+            try {
+                const snapshot = await get(sensoresRef);
+                tbody.empty(); // Limpa o corpo da tabela
+                if (snapshot.exists()) {
+                    snapshot.forEach(sensor => {
+                        const dados = sensor.val();
+
+                        // Determinar o ícone (vermelho para alerta, verde para normal)
+                        var icon = defaultIcon;
+                        var alertaClass = "";
+
+                        if (dados.alerta.nivelCritico == 1) {
+                            icon = defaultIcon;
+                            alertaClass = "text-success";
+                        }
+                        if (dados.alerta.nivelCritico == 2) {
+                            icon = yellowIcon;
+                            alertaClass = "text-warning";
+                        }
+                        if (dados.alerta.nivelCritico == 3) {
+                            icon = redIcon;
+                            alertaClass = "text-danger";
+                        }
+
+
+
+                        // Adicionando a linha na tabela
+                        const row = `
+                                    <tr>
+                                        <td>${dados.sensorId}</td>
+                                        <td>${dados.dados.nivelAgua.valor} ${dados.dados.nivelAgua.unidade}</td>
+                                        <td>${dados.dados.precipitacao.valor} ${dados.dados.precipitacao.unidade}</td>
+                                        <td class="${alertaClass}">${dados.alerta.mensagem}</td>
+                                    </tr>
+                                `;
+                        tbody.append(row);
+
+
+         
+
+                        // Adiciona a localização ao mapa
+                        const marker = L.marker([dados.localizacao.latitude, dados.localizacao.longitude], { icon: icon }).addTo(map);
+                        marker.bindPopup(`
+                                    <strong>ID do Sensor:</strong> ${dados.sensorId}<br>
+                                    <strong>Nível da Água:</strong> ${dados.dados.nivelAgua.valor} ${dados.dados.nivelAgua.unidade}<br>
+                                    <strong>Precipitação:</strong> ${dados.dados.precipitacao.valor} ${dados.dados.precipitacao.unidade}<br>
+                                    <strong>Status do Alerta:</strong> ${dados.alerta.status}<br>
+                                    <strong>Mensagem:</strong> ${dados.alerta.mensagem}
+                                `);
+                    });
+                } else {
+                    tbody.append('<tr><td colspan="4">Nenhum sensor encontrado.</td></tr>');
+                }
+
+
+
+            } catch (error) {
+                console.error("Erro ao obter dados dos sensores:", error);
+            }
+        }
+        // Atualizar a tabela a cada 2 segundos
+        setInterval(carregarSensores, 2000);
+
+        // Carregar os sensores ao iniciar
+        $(document).ready(() => {
+            // Inicializa o DataTable
+            $('#tabelaSensores').DataTable({
+                language: {
+                    "sEmptyTable": "Nenhum dado disponível na tabela",
+                    "sInfo": "Mostrando de _START_ até _END_ de _TOTAL_ entradas",
+                    "sInfoEmpty": "Mostrando 0 até 0 de 0 entradas",
+                    "sInfoFiltered": "(filtrado de _MAX_ entradas totais)",
+                    "sLengthMenu": "Mostrar _MENU_ entradas",
+                    "sLoadingRecords": "Carregando...",
+                    "sProcessing": "Processando...",
+                    "sSearch": "Pesquisar:",
+                    "sZeroRecords": "Nenhum registro encontrado",
+                    "oPaginate": {
+                        "sFirst": "Primeiro",
+                        "sLast": "Último",
+                        "sNext": "Próximo",
+                        "sPrevious": "Anterior"
+                    },
+                    "oAria": {
+                        "sSortAscending": ": ativar para classificar a coluna em ordem crescente",
+                        "sSortDescending": ": ativar para classificar a coluna em ordem decrescente"
+                    }
+                }
+            });
+            carregarSensores();
+
+
+        });
+
+
+
+    </script>
+
+
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Monitoramento de Sensores</h2>
+        <table id="tabelaSensores" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sensor ID</th>
+                    <th>Nível de Água (m)</th>
+                    <th>Precipitação (mm)</th>
+                    <th>Alerta</th>
+                </tr>
+            </thead>
+            <tbody id="tbodySensores"></tbody>
+        </table>
+    </div>
+    <div id="map"></div>
+
+</body>
+</html>
